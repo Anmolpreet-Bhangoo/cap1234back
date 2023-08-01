@@ -149,7 +149,7 @@ router.get('/new', (req, res) => {
             if(rows.affectedRows > 0) {
                 navigate("/adminPanel");
             } else {
-                res.redirect(callback+"#userAddedFalse");
+                navigate("/adminPanel");
             }
         })
         .catch((error) => {
