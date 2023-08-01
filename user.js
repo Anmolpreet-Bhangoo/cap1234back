@@ -147,7 +147,7 @@ router.get('/new', (req, res) => {
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                res.redirect(301, '/adminPanel');
+                res.redirect(301, callback);
             } else {
                 res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
             }
