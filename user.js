@@ -2,8 +2,10 @@ const express = require("express");
 const mysql = require('mysql2');
 const CryptoJS = require("crypto-js");
 const router = express.Router();
+import { useNavigate } from "react-router-dom";
 
 const callback = "https://frontend1234.onrender.com/adminPanel";
+const navigate = useNavigate();
 
 // middlewear
 router.use(express.json());
@@ -147,7 +149,7 @@ router.get('/new', (req, res) => {
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                res.send("<script>window.open('"+callback+"#userAddedTrue', '_self')</script>");
+                navigate("/adminPanel");
             } else {
                 res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
             }
