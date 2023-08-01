@@ -147,14 +147,15 @@ router.get('/new', (req, res) => {
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                navigate("/adminPanel");
+                res.send("<script>window.open('"+callback+"#userAddedTrue', '_self')</script>");
             } else {
-                navigate("/adminPanel");
+                res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
             }
         })
         .catch((error) => {
             console.error('Error executing query:', error);
-            navigate("/adminPanel");
+            // res.redirect(callback+"#userAddedFalse");
+            res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
         });
 
 });
