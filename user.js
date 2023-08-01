@@ -149,7 +149,7 @@ router.get('/new', (req, res) => {
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                navigate("/adminPanel");
+                navigate("/adminPanel");//new
             } else {
                 res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
             }
