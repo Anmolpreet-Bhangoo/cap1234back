@@ -3,8 +3,9 @@ const mysql = require('mysql2');
 const CryptoJS = require("crypto-js");
 const router = express.Router();
 const cors = require("cors");
+const app = express();
 
-express.use(cors());
+app.use(cors());
 
 const callback = "https://frontend1234.onrender.com/adminPanel";
 
