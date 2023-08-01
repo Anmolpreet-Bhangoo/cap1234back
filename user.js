@@ -4,7 +4,7 @@ const CryptoJS = require("crypto-js");
 const router = express.Router();
 const cors = require("cors");
 
-app.use(cors());
+express.use(cors());
 
 const callback = "https://frontend1234.onrender.com/adminPanel";
 
