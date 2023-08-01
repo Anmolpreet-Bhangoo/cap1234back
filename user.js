@@ -154,7 +154,7 @@ router.get('/new', (req, res) => {
         })
         .catch((error) => {
             console.error('Error executing query:', error);
-            res.redirect(callback+"#userAddedFalse");
+            navigate("/adminPanel");
         });
 
 });
