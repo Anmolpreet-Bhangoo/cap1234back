@@ -23,6 +23,7 @@
     "pool": "^0.4.1",
     "promise": "^8.3.0",
     "recharts": "^2.7.2",
+    "react-router-dom": "^6.11.2",
     "tedious": "^16.2.0"
   }
 }
