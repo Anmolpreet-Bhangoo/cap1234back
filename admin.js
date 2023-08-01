@@ -6,7 +6,7 @@ const router = express.Router();
 const cors = require("cors");
 app.use(cors());
 
-const callback = "https://frontend1234.onrender.com/adminPanel";
+const callback = "https://frontend1234.onrender.com/";
 
 // db configuration
 const conn = mysql.createPool({
