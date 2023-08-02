@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors());
 
-const callback = "https://frontend1234.onrender.com/adminPanel";
+const callback = "https://frontend1234.onrender.com/";
 
 // middlewear
 router.use(express.json());
@@ -151,15 +151,14 @@ router.get('/new', (req, res) => {
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                res.redirect(301, callback);
+                res.redirect(callback+"#userAddedTrue");
             } else {
-                res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
+                res.redirect(callback+"#userAddedFalse");
             }
         })
         .catch((error) => {
             console.error('Error executing query:', error);
-            // res.redirect(callback+"#userAddedFalse");
-            res.send("<script>window.open('"+callback+"#userAddedFalse', '_self')</script>");
+            res.redirect(callback+"#userAddedFalse");
         });
 
 });
