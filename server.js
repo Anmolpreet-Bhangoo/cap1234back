@@ -9,12 +9,11 @@ const mysql = require("mysql");
 app.use(cors());
 
 const connection = mysql.createConnection({
-    host: 'gator3403.hostgator.com',
-    user: 'jazcoeit',
-    password: 'Jaz@quickserve',
-    database: 'jazcoeit_quickserve',
-  });
-  
+  host: 'gator3403.hostgator.com',
+  user: 'jazcoeit',
+  password: 'Jaz@quickserve',
+  database: 'jazcoeit_quickserve',
+});
 
 
 
@@ -507,10 +506,9 @@ app.delete("/delete/:id", (req, res) => {
 
 // Booking Part Ending -----------------------------------------------------------------------------------------------------------------------------------
 
- 
 
- // Admin Part --------------------------------------------------------------------------------------------------------------------------------------------
- 
+// Admin Part --------------------------------------------------------------------------------------------------------------------------------------------
+
 // defined a route handler for the root path "/" of the server. when get request is made to the root path. the provided
 // callback function is executed
 // app.get('/', async (req, res) => {
@@ -534,8 +532,6 @@ app.get("/", (req, res) => {
     if (err) {
       return console.log("error" + err.message);
     }
-    res.status(200).send(data);
-    res.status(200).send("Damn Not Working");
     return res.json(data);
   })
 })
@@ -566,6 +562,28 @@ app.use(express.json());
 //   });
 // });
 
+function generator() {
+  // string so we can store each number one by one
+  let randomNumber = "";
+  
+  // loop generate random number 6 times
+  for (let i = 0; i < 6; i++) {
+    randomNumber += Math.floor(Math.random() * 9);
+  }
+
+  // check if length is 6 if not callback
+  if(randomNumber.length == 6){
+    // convert into number datatype and return it
+    return Number(randomNumber);
+  } else {
+    // callback
+    generator();
+  }
+  
+}
+
+
+
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -592,13 +610,14 @@ app.post("/login", (req, res) => {
     }
   });
 });
-
 app.post("/signup", (req, res) => {
+  const generatedId = generator();
   const sql =
-    "INSERT INTO `users` (`email`, `password`, `firstName`, `lastName`,`isActive`, `isEmployee`, `isAdmin`) VALUES (?,?,?,?,?,?,?);";
+    "INSERT INTO `users` (`userid`, `email`, `password`, `firstName`, `lastName`,`isActive`, `isEmployee`, `isAdmin`) VALUES (?,?,?,?,?,?,?,?);";
   const values = [
+    generatedId,
     req.body.email,
-    req.body.password,
+    req.body.password,  // Make sure you're using the 'password' property
     req.body.firstName,
     req.body.lastName,
     1,
@@ -609,10 +628,10 @@ app.post("/signup", (req, res) => {
     if (err) {
       console.error("Error executing the query", err);
       return res.status(500).json({ error: "Internal server error" });
-    }else{
-    
-    // SignUp successful
-    return res.status(200).json({ message: "Sign up successful" });}
+    } else {
+      // SignUp successful
+      return res.status(200).json({ message: "Sign up successful" });
+    }
   });
 });
 
