@@ -9,100 +9,134 @@ const mysql = require("mysql");
 app.use(cors());
 
 const connection = mysql.createConnection({
-    host: 'gator3403.hostgator.com',
-    user: 'jazcoeit',
-    password: 'Jaz@quickserve',
-    database: 'jazcoeit_quickserve',
-  });
-  
+  host: 'gator3403.hostgator.com',
+  user: 'jazcoeit',
+  password: 'Jaz@quickserve',
+  database: 'jazcoeit_quickserve',
+});
+
 
 
 
 // Ticketing Part -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+var ticketEmail = " ";
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.get("/adminTickets", (req, res) => {
-    const sql = "SELECT * FROM ISSUED_TICKETS;";
-    connection.query(sql, (err,data) => {
-        if(err)  return res.json('Error: ' + err.message);
-         return res.json(data);
-    })
+  const itemsPerPage = 20;
+  const page = req.query.page || 1;
+  const offset = (page - 1) * itemsPerPage;
+  const sql = `SELECT * FROM ISSUED_TICKETS ORDER BY TICKET_DATE DESC LIMIT ${itemsPerPage} OFFSET ${offset};`;
+  connection.query(sql, (err, data) => {
+    if (err) return res.json('Error: ' + err.message);
+    return res.json(data);
+  });
+});
+
+
+app.listen(4004, () => {
+  console.log("listening");
 })
 
-app.listen(3001, () => {
-    console.log("listening");
-})
 
-let transporter = nodemailer.createTransport({
-service: "gmail",
+const sendEmail = function (inputsubject, inputdescription) {
+
+  let transporter = nodemailer.createTransport({
+    service: "gmail",
     auth: {
-         user: "prospectissuedticket@gmail.com",
-       pass: "mqqbblfvqbrezdfx"
-        },
-     tls :{
-         rejectUnauthorized: false
-     },
- })
+      user: "prospectissuedticket@gmail.com",
+      pass: "mqqbblfvqbrezdfx"
+    },
+    tls: {
+      rejectUnauthorized: false
+    },
+  })
 
- let mailOptions = {
-     form: "prospectissuedticket@gmail.com",
-   to: "anmol.bhangoo2002@gmail.com",
-     subject: "Ticket",
-     text: "Your Ticket Has been Issued!"
- }
-
- const sendEmail = function() {
-    transporter.sendMail(mailOptions , function(err, succ){
-     if(err){
-         console.log(err)
-     }
-          else{
-         console.log("Email Sent")
-     }
- })
+  let mailOptions = {
+    form: "prospectissuedticket@gmail.com",
+    to: ticketEmail,
+    subject: "Ticket",
+    text: "Your Ticket Has been Issued! with Subject " + inputsubject + " and description as " + inputdescription + ". Thanks for letting us know about the Issue!"
+  }
+  transporter.sendMail(mailOptions, function (err, succ) {
+    if (err) {
+      console.log(err)
+    }
+    else {
+      console.log("Email Sent")
+    }
+  })
 }
 
 
+
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads' )
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
-    }
+  destination: (req, file, cb) => {
+    cb(null, 'uploads')
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
+  }
 })
 
 const upload = multer({
-    storage: storage
+  storage: storage
 })
 
 
 app.use(express.json());
 app.post('/createTicket', upload.single('image'), (req, res) => {
-    const sql = "INSERT INTO ISSUED_TICKETS (TICKET_DATE, TICKET_SUBJECT, TICKET_CATEGORY, TICKET_DESCRIPTION, TICKET_PRIORITY, TICKET_STATUS, TICKET_PIC)  VALUES (?);"
-    let filename = "";
-    if (req.file) {
-        filename = req.file.filename;
-    }
-    const currentDate = new Date();
-    const formattedDate = currentDate.toISOString().slice(0, 10);
-    const values = [
-        formattedDate,
-        req.body.subject,
-        req.body.category,
-        req.body.description,
-        req.body.priority,
-        "NotSolved",
-        filename
-    ];
-    console.log(req.body.subject);
-    console.log(req.file);
-    connection.query(sql, [values], (err, data) => {
-        if(err) return res.json("Error");
-        else 
-        sendEmail();
-        return res.json(data);
-    })
+  const sql = "INSERT INTO ISSUED_TICKETS (USER_EMAIL, TICKET_DATE, TICKET_SUBJECT, TICKET_CATEGORY, TICKET_DESCRIPTION, TICKET_PRIORITY, TICKET_STATUS, TICKET_PIC)  VALUES (?);"
+  let filename = "";
+  if (req.file) {
+    filename = req.file.filename;
+  }
+  const currentDate = new Date();
+  const formattedDate = currentDate.toISOString().slice(0, 10);
+  const values = [
+    ticketEmail,
+    formattedDate,
+    req.body.subject,
+    req.body.category,
+    req.body.description,
+    req.body.priority,
+    "NotSolved",
+    filename
+  ];
+  console.log(req.body.subject);
+  console.log(req.file);
+  connection.query(sql, [values], (err, data) => {
+    if (err) return res.json("Error");
+    else
+      sendEmail(req.body.subject, req.body.description);
+    return res.json(data);
+  })
 })
+
+
+app.post("/deleteTicket", (req, res) => {
+  const sql = "DELETE FROM ISSUED_TICKETS WHERE TICKET_ID = ?;";
+  const values = [req.body.ticketID];
+
+  connection.query(sql, [values], (err, data) => {
+    if (err) return res.json("Error");
+    else
+      return res.json(data);
+  })
+});
+
+
+app.post("/solveTicket", (req, res) => {
+  const sql = `UPDATE ISSUED_TICKETS SET TICKET_STATUS = "SOLVED" WHERE TICKET_ID = ?;`;
+  const values = [req.body.ticketID];
+
+  connection.query(sql, [values], (err, data) => {
+    if (err) return res.json("Error");
+    else
+      return res.json(data);
+  })
+});
 
 // Ticketing Parts End ------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -114,175 +148,367 @@ app.post('/createTicket', upload.single('image'), (req, res) => {
 // Booking Part  ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+
 app.get("/requests", (req, res) => {
-    connection.query("SELECT * FROM createbooking", (err, result) => {
+  const page = parseInt(req.query.page) || 1; // Get the requested page, default to 1
+  const perPage = parseInt(req.query.perPage) || 20; // Number of items per page, default to 15
+
+  connection.query(
+    `SELECT COUNT(*) as total FROM createbooking`,
+    (err, countResult) => {
       if (err) {
         console.log(err);
+        res.status(500).send("Error fetching data");
       } else {
-        res.send(result);
-      }
-    });
-  });
-  
-  app.post("/booking", (req, res) => {
-    // const message = "The selected time slot conflicts with an existing booking.";
-    const sql =
-      "INSERT INTO createbooking (roomID, name, noOfGuest, bookingDate, startTime, totalHours, enquiry, endTime) VALUES (?)";
-  
-    const startTime = req.body.time; // Assuming req.body.time is a valid time string
-    const totalHours = req.body.totalHours;
-  
-    // Convert the startTime to minutes
-    const startTimeInMinutes =
-      parseInt(startTime.slice(0, 2)) * 60 + parseInt(startTime.slice(3));
-  
-    // Calculate the endTime by adding totalHours to startTime
-    const endTimeInMinutes = startTimeInMinutes + totalHours * 60;
-  
-    // Adjust the endTime if it exceeds 24 hours
-    const adjustedEndTimeInMinutes = endTimeInMinutes % (24 * 60);
-  
-    // Format the endTime as HH:mm
-    const endTime = `${Math.floor(adjustedEndTimeInMinutes / 60)
-      .toString()
-      .padStart(2, "0")}:${(adjustedEndTimeInMinutes % 60)
-      .toString()
-      .padStart(2, "0")}`;
-  
-    const newStartTime = startTimeInMinutes;
-    const newEndTime = adjustedEndTimeInMinutes;
-  
-    const roomID = req.body.roomID;
-    const bookingDate = req.body.date;
-  
-    // Check if the same roomID is booked at the same date during the selected time slot
-    const selectSql =
-      "SELECT * FROM createbooking WHERE roomID = ? AND bookingDate = ?";
-      connection.query(selectSql, [roomID, bookingDate], (selectErr, bookingData) => {
-      if (selectErr) {
-        return res.json("Error");
-      }
+        const totalRows = countResult[0].total;
+        const totalPages = Math.ceil(totalRows / perPage);
+        const startIndex = (page - 1) * perPage;
 
-      const hasConflict = bookingData.some((booking) => {
-        const existingStartTime =
-          parseInt(booking.startTime.slice(0, 2)) * 60 +
-          parseInt(booking.startTime.slice(3));
-        const existingEndTime =
-          parseInt(booking.endTime.slice(0, 2)) * 60 +
-          parseInt(booking.endTime.slice(3));
-          sendEmail1();
-        if (
-          (newStartTime >= existingStartTime && newStartTime < existingEndTime) ||
-          (newEndTime > existingStartTime && newEndTime <= existingEndTime)
-        ) {
-          return true;
-        }
-        return false;
-      });
-  
-      if (hasConflict) {
-        // Return the alert message to the user
-        return res.send(
-          '<script>alert("The selected time slot conflicts with an existing booking."); window.location.href = "/";</script>'
+        connection.query(
+          `SELECT * FROM createbooking LIMIT ${startIndex}, ${perPage}`,
+          (err, dataResult) => {
+            if (err) {
+              console.log(err);
+              res.status(500).send("Error fetching data");
+            } else {
+              const response = {
+                data: dataResult,
+                totalPages: totalPages,
+              };
+              res.send(response);
+            }
+          }
         );
       }
-  
-      const values = [
-        roomID,
-        req.body.name,
-        req.body.noOfGuest,
-        bookingDate,
-        req.body.time,
-        req.body.totalHours,
-        req.body.enquiry,
-        endTime,
-      ];
-  
-      connection.query(sql, [values], (err, data) => {
-        if (err) return res.json("Error");
-        return res.json(data);
+    }
+  );
+});
+
+const sendEmail1 = function(inputName, inputRoomID, inputBookingDate, inputStartTime, inputTotalHours, inputEnquiry, inputEndTime) {
+
+  let transporter1 = nodemailer.createTransport({
+
+    service: "gmail",
+
+        auth: {
+
+             user: "prospectissuedticket@gmail.com",
+
+           pass: "mqqbblfvqbrezdfx"
+
+            },
+
+         tls :{
+
+             rejectUnauthorized: false
+
+         },
+
+     })
+
+   
+
+     let mailOptions1 = {
+
+         form: "prospectissuedticket@gmail.com",
+
+       to: ticketEmail,
+
+         subject: "Booking",
+
+         text: "Your Booking has been confirmed! " + "\n" + "\n" + "Name: " + inputName  + "\n" + "RoomID: " + inputRoomID + "\n" +
+
+         "Booking Date: " + inputBookingDate + "\n" + "Start Time: " + inputStartTime + "\n"  + "Total Hours: " + inputTotalHours + "\n" +
+
+         "Enquiry: " + inputEnquiry + "\n" + "End Time: " + inputEndTime  + "\n" + "\n" +"Thank you for Booking with us!"
+
+ 
+
+     }
+
+    transporter1.sendMail(mailOptions1 , function(err, succ){
+
+     if(err){
+
+         console.log(err)
+
+     }
+
+          else{
+
+         console.log("Email Sent")
+
+     }
+
+ })
+
+}
+
+ 
+
+app.post("/booking", (req, res) => {
+
+  // const message = "The selected time slot conflicts with an existing booking.";
+
+  const sql =
+
+    "INSERT INTO createbooking (roomID, email, name, bookingDate, startTime, totalHours, enquiry, endTime) VALUES (?)";
+
+ 
+
+  const startTime = req.body.time; // Assuming req.body.time is a valid time string
+
+  const totalHours = req.body.totalHours;
+
+ 
+
+  // Convert the startTime to minutes
+
+  const startTimeInMinutes =
+
+    parseInt(startTime.slice(0, 2)) * 60 + parseInt(startTime.slice(3));
+
+ 
+
+  // Calculate the endTime by adding totalHours to startTime
+
+  const endTimeInMinutes = startTimeInMinutes + totalHours * 60;
+
+ 
+
+  // Adjust the endTime if it exceeds 24 hours
+
+  const adjustedEndTimeInMinutes = endTimeInMinutes % (24 * 60);
+
+ 
+
+  // Format the endTime as HH:mm
+
+  const endTime = `${Math.floor(adjustedEndTimeInMinutes / 60)
+
+    .toString()
+
+    .padStart(2, "0")}:${(adjustedEndTimeInMinutes % 60)
+
+    .toString()
+
+    .padStart(2, "0")}`;
+
+ 
+
+  const newStartTime = startTimeInMinutes;
+
+  const newEndTime = adjustedEndTimeInMinutes;
+
+ 
+
+  const roomID = req.body.roomID;
+
+  const bookingDate = req.body.date;
+
+ 
+
+  // Check if the same roomID is booked at the same date during the selected time slot
+
+  const selectSql =
+
+    "SELECT * FROM createbooking WHERE roomID = ? AND bookingDate = ?";
+
+    connection.query(selectSql, [roomID, bookingDate], (selectErr, bookingData) => {
+
+    if (selectErr) {
+
+      return res.json("Error");
+
+    }
+
+ 
+
+    const hasConflict = bookingData.some((booking) => {
+
+      const existingStartTime =
+
+        parseInt(booking.startTime.slice(0, 2)) * 60 +
+
+        parseInt(booking.startTime.slice(3));
+
+      const existingEndTime =
+
+        parseInt(booking.endTime.slice(0, 2)) * 60 +
+
+        parseInt(booking.endTime.slice(3));
+
+       
+
+        if (
+
+          (newStartTime >= existingStartTime && newStartTime <= existingEndTime) ||
+
+          (newEndTime >= existingStartTime && newEndTime <= existingEndTime) ||
+
+          (newStartTime <= existingStartTime && newEndTime >= existingStartTime)
+
+        )
+
+       
+
+        {
+
+        conflictingBooking = booking;
+
+        return true;
+
+      }
+
+      return false;
+
+    });
+
+ 
+
+    if (hasConflict) {
+
+      return res.status(600).json({
+
+        error: "Time Conflict",
+
+        startTime: conflictingBooking.startTime,
+
+        endTime:conflictingBooking.endTime,
+
       });
-    });
-  });
-  
-  app.put("/update",(req,res) => {
-    const id = req.body.id;
-    const roomID = req.body.roomID;
-    const name = req.body.name;
-    const noOfGuest = req.body.noOfGuest;
-    const bookingDate = req.body.bookingDate;
-    const startTime = req.body.startTime;
-    const totalHours = req.body.totalHours;
-    const enquiry = req.body.enquiry;
-    const endTime = req.body.endTime;
-  
-    connection.query('UPDATE createBooking SET roomID=?, name=?, noOfGuest=?, bookingDate=?, startTime=?, totalHours=?, enquiry=?, endTime=? WHERE id=?', [roomID, name, noOfGuest, bookingDate, startTime
-    , totalHours, enquiry, endTime, id],
-      (err,result) => {
-        if(err){
-          console.log(err);
-          res.status(500).send('There have been an error while updating the current booking room request');
-        }else{
-          console.log(result);
-          res.send(result);
-        }
+
+    }
+
+   
+
+ 
+
+    const values = [
+
+      roomID,
+
+      ticketEmail,
+
+      req.body.name,
+
+      bookingDate,
+
+      req.body.time,
+
+      req.body.totalHours,
+
+      req.body.enquiry,
+
+      endTime,
+
+    ];
+
+ 
+
+    connection.query(sql, [values], (err, data) => {
+
+      if (err) return res.json("Error");
+
+      else {
+
+        sendEmail1(req.body.name, roomID, bookingDate, req.body.time, req.body.totalHours, req.body.enquiry, endTime);
+
+        return res.json(data);
+
       }
-    );
+
+     
+
+    });
+
   });
-  
-  app.delete("/delete/:id", (req, res) => {
-    const id = req.params.id;
-  
-    connection.query("DELETE FROM createbooking WHERE id=?", id, (err, result) => {
-      if (err) {
+
+});
+
+ 
+
+app.put("/update",(req,res) => {
+
+  const id = req.body.id;
+
+  const roomID = req.body.roomID;
+
+  const name = req.body.name;
+
+  const bookingDate = req.body.bookingDate;
+
+  const startTime = req.body.startTime;
+
+  const totalHours = req.body.totalHours;
+
+  const enquiry = req.body.enquiry;
+
+  const endTime = req.body.endTime;
+
+ 
+
+  connection.query('UPDATE createBooking SET roomID=?, name=?, bookingDate=?, startTime=?, totalHours=?, enquiry=?, endTime=? WHERE id=?', [roomID, name, bookingDate, startTime
+
+  , totalHours, enquiry, endTime, id],
+
+    (err,result) => {
+
+      if(err){
+
         console.log(err);
-        res.status(500).send("There is an error deleting this request");
-      } else {
+
+        res.status(500).send('There have been an error while updating the current booking room request');
+
+      }else{
+
         console.log(result);
+
         res.send(result);
+
       }
-    });
+
+    }
+
+  );
+
+});
+
+ 
+
+app.delete("/delete/:id", (req, res) => {
+
+  const id = req.params.id;
+
+ 
+
+  connection.query("DELETE FROM createbooking WHERE id=?", id, (err, result) => {
+
+    if (err) {
+
+      console.log(err);
+
+      res.status(500).send("There is an error deleting this request");
+
+    } else {
+
+      console.log(result);
+
+      res.send(result);
+
+    }
+
   });
 
-  
-let transporter1 = nodemailer.createTransport({
-  service: "gmail",
-      auth: {
-           user: "prospectissuedticket@gmail.com",
-         pass: "mqqbblfvqbrezdfx"
-          },
-       tls :{
-           rejectUnauthorized: false
-       },
-   })
-  
-   let mailOptions1 = {
-       form: "prospectissuedticket@gmail.com",
-     to: "anmol.bhangoo2002@gmail.com",
-       subject: "Booking",
-       text: "Your Booking has been confirmed!"
-   }
-  
-   const sendEmail1 = function() {
-      transporter1.sendMail(mailOptions1 , function(err, succ){
-       if(err){
-           console.log(err)
-       }
-            else{
-           console.log("Email Sent")
-       }
-   })
-  }
+});
 
-  
 
- // Booking Part Ending -----------------------------------------------------------------------------------------------------------------------------------
-  
 
- 
+// Booking Part Ending -----------------------------------------------------------------------------------------------------------------------------------
 
- // Admin Part --------------------------------------------------------------------------------------------------------------------------------------------
- 
+
+// Admin Part --------------------------------------------------------------------------------------------------------------------------------------------
+
 // defined a route handler for the root path "/" of the server. when get request is made to the root path. the provided
 // callback function is executed
 // app.get('/', async (req, res) => {
@@ -306,8 +532,6 @@ app.get("/", (req, res) => {
     if (err) {
       return console.log("error" + err.message);
     }
-    res.status(200).send(data);
-    res.status(200).send("Damn Not Working");
     return res.json(data);
   })
 })
@@ -338,6 +562,28 @@ app.use(express.json());
 //   });
 // });
 
+function generator() {
+  // string so we can store each number one by one
+  let randomNumber = "";
+  
+  // loop generate random number 6 times
+  for (let i = 0; i < 6; i++) {
+    randomNumber += Math.floor(Math.random() * 9);
+  }
+
+  // check if length is 6 if not callback
+  if(randomNumber.length == 6){
+    // convert into number datatype and return it
+    return Number(randomNumber);
+  } else {
+    // callback
+    generator();
+  }
+  
+}
+
+
+
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -366,11 +612,13 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
+  const generatedId = generator();
   const sql =
-    "INSERT INTO `users` (`email`, `password`, `firstName`, `lastName`,`isActive`, `isEmployee`, `isAdmin`) VALUES (?,?,?,?,?,?,?);";
+    "INSERT INTO `users` (`userid`, `email`, `password`, `firstName`, `lastName`,`isActive`, `isEmployee`, `isAdmin`) VALUES (?,?,?,?,?,?,?,?);";
   const values = [
+    generatedId,
     req.body.email,
-    req.body.password,
+    req.body.password,  // Make sure you're using the 'password' property
     req.body.firstName,
     req.body.lastName,
     1,
@@ -381,10 +629,10 @@ app.post("/signup", (req, res) => {
     if (err) {
       console.error("Error executing the query", err);
       return res.status(500).json({ error: "Internal server error" });
-    }else{
-    
-    // SignUp successful
-    return res.status(200).json({ message: "Sign up successful" });}
+    } else {
+      // SignUp successful
+      return res.status(200).json({ message: "Sign up successful" });
+    }
   });
 });
 
