@@ -35,7 +35,7 @@ app.get("/adminTickets", (req, res) => {
 });
 
 
-app.listen(3001, () => {
+app.listen(4004, () => {
   console.log("listening");
 })
 
@@ -610,6 +610,7 @@ app.post("/login", (req, res) => {
     }
   });
 });
+
 app.post("/signup", (req, res) => {
   const generatedId = generator();
   const sql =
