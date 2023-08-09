@@ -586,7 +586,7 @@ function generator() {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
-
+ ticketEmail = email;
   const sql = "SELECT * FROM users WHERE email = ? AND password = ?";
   connection.query(sql, [email, password], (err, result) => {
     if (err) {
