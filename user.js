@@ -141,18 +141,17 @@ router.get('/adminOnly', (req, res) => {
 // insert new user based on get query data (similar to php)
 router.get('/new', (req, res) => {
 
-    const encrypt = CryptoJS.SHA256(req.query.userPass) // encrypt plain text to SHA256 hash code
-    const encryptedPass = encrypt.toString(CryptoJS.enc.Base64); // convert hascode to string
+    // const encrypt = CryptoJS.SHA256(req.query.userPass) // encrypt plain text to SHA256 hash code
+    // const encryptedPass = encrypt.toString(CryptoJS.enc.Base64); // convert hascode to string
 
-    const queryData = [Number(req.query.userId), req.query.fName, req.query.lName, req.query.userEmail, encryptedPass, Number(req.query.isAdmin)]; // data from form
+    const queryData = [Number(req.query.userId), req.query.fName, req.query.lName, req.query.userEmail, req.query.userPass, Number(req.query.isAdmin)]; // data from form
     const sql = 'INSERT INTO users (userid, firstName, lastName, email, password, isEmployee, isAdmin, isActive) VALUES (?, ?, ?, ?, ?, 1, ?, 1)';
         
     promiseConn.query(sql, queryData)
         .then(([rows, fields]) => {
             // check if query affected a row
             if(rows.affectedRows > 0) {
-                // res.redirect(callback+"#userAddedTrue");
-                res.send("<script>window.open('"+callback+"#userAddedTrue')</script>");
+                res.redirect(callback+"#userAddedTrue");
             } else {
                 res.redirect(callback+"#userAddedFalse");
             }
