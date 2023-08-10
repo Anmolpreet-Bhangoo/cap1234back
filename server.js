@@ -456,7 +456,7 @@ app.put("/update",(req,res) => {
 
  
 
-  connection.query('UPDATE createBooking SET roomID=?, name=?, bookingDate=?, startTime=?, totalHours=?, enquiry=?, endTime=? WHERE id=?', [roomID, name, bookingDate, startTime
+  connection.query('UPDATE createbooking SET roomID=?, name=?, bookingDate=?, startTime=?, totalHours=?, enquiry=?, endTime=? WHERE id=?', [roomID, name, bookingDate, startTime
 
   , totalHours, enquiry, endTime, id],
 
