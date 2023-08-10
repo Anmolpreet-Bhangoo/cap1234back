@@ -368,7 +368,7 @@ app.post("/booking", (req, res) => {
 
     if (hasConflict) {
 
-      return res.status(600).json({
+      return res.status(401).json({
 
         error: "Time Conflict",
 
