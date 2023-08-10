@@ -16,6 +16,17 @@ const connection = mysql.createConnection({
 });
 
 
+setInterval(function () {
+  connection.query('SELECT 1', (err, result) => {
+      if (err) {
+          console.error('Error executing the query:', err);
+      } else {
+          console.log('Database connection is active');
+      }
+  });
+}, 5000);
+
+
 
 
 // Ticketing Part -----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,10 +104,6 @@ app.post('/createTicket', upload.single('image'), (req, res) => {
     filename = req.file.filename;
   }
   const currentDate = new Date();
-
-  // Set the timezone to Alberta (Mountain Time)
-  const albertaTimezoneOffset = -6 * 60; // Alberta is UTC-6 during Standard Time
-  currentDate.setMinutes(currentDate.getMinutes() + albertaTimezoneOffset);
 
   // Format the date as "YYYY-MM-DD"
   const formattedDate = currentDate.toISOString().slice(0, 10);
