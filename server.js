@@ -107,7 +107,8 @@ app.post('/createTicket', upload.single('image'), (req, res) => {
   console.log(req.body.subject);
   console.log(req.file);
   connection.query(sql, [values], (err, data) => {
-    if (err) return res.json("Error");
+    if (err) 
+    return res.status(500).json({ error: "Internal server error" });
     else
       sendEmail(req.body.subject, req.body.description);
     return res.json(data);
