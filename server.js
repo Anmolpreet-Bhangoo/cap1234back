@@ -15,6 +15,11 @@ const connection = mysql.createConnection({
   database: 'jazcoeit_quickserve',
 });
 
+// Ping endpoint
+app.get('/ping', (req, res) => {
+  res.send('OK');
+});
+
 
 setInterval(function () {
   connection.query('SELECT 1', (err, result) => {
