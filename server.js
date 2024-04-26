@@ -10,7 +10,7 @@ app.use(cors());
 
 const connection = mysql.createConnection({
   host: 'gator3403.hostgator.com',
-  user: 'jazcoeit',
+  user: 'jazcoeit_quickserve_public',
   password: 'Jaz@quickserve',
   database: 'jazcoeit_quickserve',
 });
