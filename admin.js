@@ -11,7 +11,7 @@ const callback = "https://frontend1234.onrender.com/";
 // db configuration
 const conn = mysql.createPool({
     host: 'gator3403.hostgator.com',
-    user: 'jazcoeit',
+    user: 'jazcoeit_quickserve_public',
     password: 'Jaz@quickserve',
     database: 'jazcoeit_quickserve',
   });
